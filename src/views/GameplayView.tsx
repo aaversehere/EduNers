@@ -110,17 +110,20 @@ export const GameplayView: React.FC = () => {
 
             {/* Info Panel Pasien jika ada */}
             {displayPatientName && (
-                <div className="bg-slate-900/95 border-[4px] border-amber-300 p-3.5 rounded-[1.5rem] my-3 text-xs z-10 flex items-center justify-between shadow-[0_6px_0_#d97706,0_10px_15px_rgba(0,0,0,0.3)] backdrop-blur-md shrink-0">
-                    <div>
-                        <span className="font-black text-amber-300 text-sm drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] block">{displayPatientName}</span>
-                        <span className="text-[12px] text-sky-100 font-bold mt-1 block leading-relaxed">{displayPatientInfo}</span>
-                    </div>
+                <div className="bg-slate-900/95 border-[4px] border-amber-300 p-3.5 rounded-[1.5rem] my-3 text-xs z-10 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-6 shadow-[0_6px_0_#d97706,0_10px_15px_rgba(0,0,0,0.3)] backdrop-blur-md shrink-0">
+                    <span className="font-black text-amber-300 text-sm drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] block shrink-0 md:max-w-[30%]">
+                        {displayPatientName}
+                    </span>
+                    <span className="text-[12px] text-sky-100 font-bold block leading-relaxed md:text-right flex-1">
+                        {displayPatientInfo}
+                    </span>
                 </div>
             )}
 
             {/* Main Game Content Area */}
-            <div className="flex-1 flex flex-col justify-center my-4 z-10 overflow-y-auto">
-                {showIntro ? (
+            <div className="flex-1 flex flex-col my-4 z-10 overflow-y-auto">
+                <div className="w-full max-w-7xl mx-auto px-4 md:px-8 my-auto">
+                    {showIntro ? (
                     <div className="space-y-4 my-auto w-full max-w-xl mx-auto">
                         <DialogBox
                             speakerName={currentUser?.username || (language === 'id' ? 'Ners Jaga' : (language === 'th' ? 'พยาบาลประจำการ' : 'Duty Nurse'))}
@@ -182,22 +185,22 @@ export const GameplayView: React.FC = () => {
 
                         {/* TIPE 2: Penyusunan Telepon SBAR (SKP 2) */}
                         {moduleData.type === 'sbar_builder' && (
-                            <div className="space-y-4 w-full max-w-4xl mx-auto">
-                                <div className="bg-slate-900/95 border-2 border-slate-700 p-3 rounded-2xl text-xs shrink-0 font-bold shadow-md">
-                                    <p className="text-sky-300 uppercase tracking-widest font-black text-[10px] mb-0.5">{t.sbarInstruction}</p>
+                            <div className="flex flex-col gap-4 w-full max-w-4xl mx-auto shrink-0">
+                                <div className="bg-slate-900/95 border-2 border-slate-700 p-3 md:p-4 rounded-2xl shrink-0 font-bold shadow-md text-center">
+                                    <p className="text-sky-300 uppercase font-black text-xs md:text-sm leading-relaxed">{t.sbarInstruction}</p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start shrink-0">
                                     {/* Area Telepon yang Disusun */}
-                                    <div className="min-h-[160px] md:min-h-[280px] bg-slate-955/90 border-4 border-dashed border-sky-300 rounded-2xl p-3 space-y-2 flex flex-col justify-start shadow-inner">
-                                        <p className="text-[10px] text-sky-300 font-black uppercase tracking-wider mb-1">{t.sbarSelected}</p>
+                                    <div className="min-h-[160px] md:min-h-[280px] bg-slate-955/90 border-4 border-dashed border-sky-300 rounded-2xl p-3 flex flex-col gap-2 justify-start shadow-inner">
+                                        <p className="text-[10px] text-sky-300 font-black uppercase tracking-wider mb-1 shrink-0">{t.sbarSelected}</p>
                                         {selectedSBAR.length === 0 ? (
-                                            <p className="text-xs text-slate-500 text-center py-10 my-auto font-black">-- {language === 'id' ? 'Belum ada dialog dipilih' : (language === 'th' ? 'ยังไม่ได้เลือกการสนทนา' : 'No dialog selected')} --</p>
+                                            <p className="text-xs text-slate-500 text-center py-10 my-auto font-black shrink-0">-- {language === 'id' ? 'Belum ada dialog dipilih' : (language === 'th' ? 'ยังไม่ได้เลือกการสนทนา' : 'No dialog selected')} --</p>
                                         ) : (
                                             selectedSBAR.map((item, idx) => (
-                                                <div key={idx} className="p-3 bg-gradient-to-r from-sky-900 to-sky-955 border-[3px] border-sky-200 rounded-2xl text-xs flex items-center justify-between shadow-md">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-black bg-amber-400 text-slate-950 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px]">{item.category}</span>
+                                                <div key={idx} className="p-3 bg-gradient-to-r from-sky-900 to-sky-955 border-[3px] border-sky-200 rounded-2xl text-xs flex items-center justify-between shadow-md shrink-0">
+                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                        <span className="shrink-0 font-black bg-amber-400 text-slate-950 px-2 py-0.5 rounded-lg border border-amber-200 text-[10px]">{['S', 'B', 'A', 'R'][idx]}</span>
                                                         <span className="text-slate-100 font-bold line-clamp-2">{getLocalizedText(item.text, item.textEn, item.textTh)}</span>
                                                     </div>
                                                     <button
@@ -205,7 +208,7 @@ export const GameplayView: React.FC = () => {
                                                             setSelectedSBAR(selectedSBAR.filter((_, i) => i !== idx));
                                                             setAvailableSBAR([...availableSBAR, item]);
                                                         }}
-                                                        className="text-rose-300 hover:text-rose-200 font-black ml-2 text-xs hover:underline cursor-pointer"
+                                                        className="shrink-0 text-rose-300 hover:text-rose-200 font-black ml-2 text-xs hover:underline cursor-pointer"
                                                     >
                                                         {language === 'id' ? 'BATAL' : (language === 'th' ? 'ยกเลิก' : 'CANCEL')}
                                                     </button>
@@ -215,8 +218,8 @@ export const GameplayView: React.FC = () => {
                                     </div>
 
                                     {/* Pilihan Dialog yang Tersedia */}
-                                    <div className="space-y-2">
-                                        <p className="text-[10px] text-amber-300 font-black uppercase tracking-wider mb-1">{t.sbarAvailable}</p>
+                                    <div className="flex flex-col gap-3">
+                                        <p className="text-[10px] text-amber-300 font-black uppercase tracking-wider mb-1 shrink-0">{t.sbarAvailable}</p>
                                         {availableSBAR.map((item, idx) => (
                                             <motion.div
                                                 key={idx}
@@ -232,7 +235,7 @@ export const GameplayView: React.FC = () => {
                                                         const explanationSBAR = language === 'id' 
                                                             ? "Urutan pelaporan telepon SBAR wajib dimulai dari Situation, Background, Assessment, dan Recommendation."
                                                             : (language === 'th'
-                                                                ? "ลำดับการรายงานทางโทรศัพท์ SBAR ต้องเริ่มจาก Situation (สถานการณ์), Background (ประวัติ), Assessment (การประเมิน), และ Recommendation (ข้อเสนอแนะ)"
+                                                                ? "การส่งต่อผู้ป่วย SBAR จะต้องเรียงลำดับจาก Situation (สถานการณ์), Background (ภูมิหลัง), Assessment (การประเมิน), และ Recommendation (ข้อเสนอแนะ)"
                                                                 : "SBAR reporting must strictly follow Situation, Background, Assessment, and Recommendation order.");
                                                         handleFinishSKP(
                                                             isRight,
@@ -242,10 +245,10 @@ export const GameplayView: React.FC = () => {
                                                         );
                                                     }
                                                 }}
-                                                className="p-3.5 bg-slate-900/90 border-4 border-slate-700 hover:border-amber-300 rounded-2xl cursor-pointer text-xs flex items-center gap-2.5 shadow-[0_4px_0_#1e293b] hover:shadow-[0_4px_0_#d97706] transition-all"
+                                                className="p-3.5 bg-slate-900/90 border-4 border-slate-700 hover:border-amber-300 rounded-2xl cursor-pointer text-xs flex items-center gap-2.5 shadow-[0_4px_0_#1e293b] hover:shadow-[0_4px_0_#d97706] transition-all overflow-hidden shrink-0"
                                             >
-                                                <span className="font-black bg-slate-800 text-sky-300 px-2 py-0.5 rounded-lg border border-slate-700">{item.category}</span>
-                                                <span className="text-slate-200 font-bold">{getLocalizedText(item.text, item.textEn, item.textTh)}</span>
+                                                <span className="shrink-0 font-black bg-slate-800 text-sky-300 px-3 py-0.5 rounded-lg border border-slate-700 text-lg leading-none">+</span>
+                                                <span className="text-slate-200 font-bold flex-1 min-w-0 break-words">{getLocalizedText(item.text, item.textEn, item.textTh)}</span>
                                             </motion.div>
                                         ))}
                                     </div>
@@ -396,6 +399,7 @@ export const GameplayView: React.FC = () => {
                         )}
                     </>
                 )}
+                </div>
             </div>
 
             {/* Modal Result Feedback */}

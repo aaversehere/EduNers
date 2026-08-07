@@ -18,19 +18,38 @@ const INITIAL_GRID = [
     ['C', 'L', 'I', 'N', 'I', 'C', 'A', 'L', 'S', 'S'],
 ];
 
-const TARGET_WORDS = ['PATIENT', 'SAFETY', 'NURSE', 'HYGIENE', 'SURGERY'];
-
-const QUIZ_QUESTION = {
-    question: "While conducting morning rounds, a nurse observes that a 65-year-old post-operative patient has a yellow ID wristband in addition to the standard blue hospital band. What clinical safety indication does this yellow wristband represent in international nursing standards?",
-    options: [
-        "The patient has a confirmed severe allergy to Penicillin or other specific medications.",
-        "The patient is assessed as a high risk for falling (Morse Fall Scale score > 45).",
-        "The patient is scheduled for an urgent surgical procedure requiring blood transfusion.",
-        "The patient requires strict respiratory isolation due to an airborne infectious disease."
-    ],
-    correct: 1,
-    explanation: "In standard international hospital color-coding (JCI guidelines): Blue/Pink is for general identification (Male/Female), Red is for Drug Allergies, and YELLOW indicates a High Fall Risk requiring strict preventive safety measures such as bed rails up and assisted mobility."
-};
+const CASE_STUDY_QUESTIONS = [
+    {
+        word: 'PATIENT',
+        id: "Individu utama yang menerima perawatan medis dan menjadi fokus keselamatan di rumah sakit disebut sebagai...",
+        en: "The primary individual receiving medical care and the focus of safety in the hospital is referred to as a...",
+        th: "บุคคลหลักที่ได้รับการรักษาทางการแพทย์และเป็นจุดเน้นด้านความปลอดภัยในโรงพยาบาลเรียกว่า..."
+    },
+    {
+        word: 'SAFETY',
+        id: "Memasang pagar tempat tidur untuk mencegah pasien berisiko tinggi jatuh adalah bagian dari prosedur keamanan atau...",
+        en: "Raising the bed rails to prevent a high-risk patient from falling is part of the procedure for...",
+        th: "การยกราวกั้นเตียงขึ้นเพื่อป้องกันไม่ให้ผู้ป่วยที่มีความเสี่ยงสูงหกล้มเป็นส่วนหนึ่งของขั้นตอนการรักษาความ..."
+    },
+    {
+        word: 'NURSE',
+        id: "Tenaga medis profesional yang bertugas merawat dan memantau kondisi vital pasien setiap hari adalah...",
+        en: "The professional medical staff responsible for caring for and monitoring the patient's vital conditions daily is a...",
+        th: "บุคลากรทางการแพทย์มืออาชีพที่รับผิดชอบในการดูแลและติดตามอาการสำคัญของผู้ป่วยทุกวันคือ..."
+    },
+    {
+        word: 'HYGIENE',
+        id: "Tindakan mencuci tangan sebelum dan sesudah menyentuh pasien adalah prosedur wajib untuk menjaga...",
+        en: "The act of washing hands before and after touching a patient is a mandatory procedure to maintain...",
+        th: "การล้างมือก่อนและหลังสัมผัสผู้ป่วยเป็นขั้นตอนบังคับเพื่อรักษา..."
+    },
+    {
+        word: 'SURGERY',
+        id: "Prosedur operatif medis yang dilakukan oleh dokter di dalam ruang operasi (OK) disebut...",
+        en: "A medical operative procedure performed by doctors in the operating room (OR) is called...",
+        th: "ขั้นตอนการผ่าตัดทางการแพทย์ที่ดำเนินการโดยแพทย์ในห้องผ่าตัด (OR) เรียกว่า..."
+    }
+];
 
 export const WordSearchView: React.FC = () => {
     const { currentUser, setScreen, submitSKPResult, language } = useGameStore();
@@ -38,8 +57,9 @@ export const WordSearchView: React.FC = () => {
     const [timeLeft, setTimeLeft] = useState(600); // 10 menit
     const [selectedCells, setSelectedCells] = useState<string[]>([]);
     const [foundWords, setFoundWords] = useState<string[]>([]);
-    const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isGameComplete, setIsGameComplete] = useState(false);
+    const [foundCells, setFoundCells] = useState<string[]>([]);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -56,30 +76,71 @@ export const WordSearchView: React.FC = () => {
 
     const toggleCell = (row: number, col: number) => {
         const key = `${row}-${col}`;
-        if (selectedCells.includes(key)) {
-            setSelectedCells(selectedCells.filter((c) => c !== key));
+        
+        // Prevent toggling already found cells
+        if (foundCells.includes(key)) return;
+
+        let newSelected = [...selectedCells];
+        if (newSelected.includes(key)) {
+            newSelected = newSelected.filter((c) => c !== key);
         } else {
-            setSelectedCells([...selectedCells, key]);
+            newSelected.push(key);
         }
+        
+        setSelectedCells(newSelected);
+
+        // Check if selected cells form any of the target words
+        checkWordMatch(newSelected);
     };
 
-    const handleMarkWord = (word: string) => {
-        if (!foundWords.includes(word)) {
-            setFoundWords([...foundWords, word]);
+    const checkWordMatch = (currentSelected: string[]) => {
+        if (currentSelected.length === 0) return;
+        if (currentQuestionIndex >= CASE_STUDY_QUESTIONS.length) return;
+
+        // Sort coordinates for easier matching regardless of click order
+        const sortedSelected = [...currentSelected].sort();
+        
+        const currentQuestion = CASE_STUDY_QUESTIONS[currentQuestionIndex];
+        const word = currentQuestion.word;
+
+        if (foundWords.includes(word)) return;
+        
+        // Check horizontal match in the grid
+        for (let r = 0; r < INITIAL_GRID.length; r++) {
+            const rowStr = INITIAL_GRID[r].join('');
+            const colIdx = rowStr.indexOf(word);
+            
+            if (colIdx !== -1) {
+                const expectedCoords = [];
+                for (let i = 0; i < word.length; i++) {
+                    expectedCoords.push(`${r}-${colIdx + i}`);
+                }
+                
+                const sortedExpected = expectedCoords.sort();
+                
+                if (sortedSelected.length === sortedExpected.length && 
+                    sortedSelected.every((val, index) => val === sortedExpected[index])) {
+                    
+                    // Match found!
+                    setFoundWords(prev => [...prev, word]);
+                    setFoundCells(prev => [...prev, ...expectedCoords]);
+                    setSelectedCells([]);
+                    setCurrentQuestionIndex(prev => prev + 1);
+                    return; // Exit early
+                }
+            }
         }
     };
 
     const handleSubmitAll = () => {
-        setIsSubmitted(true);
-        const isQuizRight = quizAnswer === QUIZ_QUESTION.correct;
-        const wordScore = foundWords.length * 10;
-        const quizScore = isQuizRight ? 50 : 0;
-        const totalLevelScore = wordScore + quizScore;
+        setIsGameComplete(true);
+        const wordScore = foundWords.length * 20; // 5 kata = 100
+        const totalLevelScore = wordScore;
         const earnedStars = totalLevelScore >= 80 ? 3 : totalLevelScore >= 50 ? 2 : 1;
 
         submitSKPResult({
             skpId: 7, // Level 2 ID
-            isCorrect: isQuizRight && foundWords.length >= 3,
+            isCorrect: foundWords.length === CASE_STUDY_QUESTIONS.length,
             score: totalLevelScore,
             stars: earnedStars
         });
@@ -95,6 +156,8 @@ export const WordSearchView: React.FC = () => {
             );
         }
     };
+
+    const allWordsFound = foundWords.length === CASE_STUDY_QUESTIONS.length;
 
     return (
         <div className="h-full flex flex-col justify-between p-4 bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-white overflow-y-auto">
@@ -112,40 +175,75 @@ export const WordSearchView: React.FC = () => {
                 </div>
             </div>
 
-            <div className="my-4 grid grid-cols-1 md:grid-cols-12 gap-6 items-start flex-1 py-2">
+            {/* Case Study Banner */}
+            <div className="bg-slate-900/90 border border-cyan-500/50 p-4 rounded-3xl shadow-xl mt-4 shrink-0 mx-auto w-full max-w-4xl transition-all duration-500">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xs font-black uppercase text-cyan-300 flex items-center gap-1.5">
+                        <Award className="w-4 h-4" />
+                        {language === 'id' ? 'Soal Studi Kasus' : (language === 'th' ? 'คำถามกรณีศึกษา' : 'Case Study Question')}
+                    </h3>
+                    <span className="text-[10px] font-bold bg-slate-950 px-2 py-1 rounded-lg border border-slate-800 text-cyan-300">
+                        {Math.min(currentQuestionIndex + 1, CASE_STUDY_QUESTIONS.length)} / {CASE_STUDY_QUESTIONS.length}
+                    </span>
+                </div>
+                
+                <p className="text-sm md:text-base text-slate-200 leading-relaxed font-semibold bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner min-h-[80px]">
+                    {currentQuestionIndex < CASE_STUDY_QUESTIONS.length 
+                        ? CASE_STUDY_QUESTIONS[currentQuestionIndex][language as 'id' | 'en' | 'th']
+                        : (language === 'id' ? 'Luar biasa! Anda telah menyelesaikan semua soal.' : (language === 'th' ? 'ยอดเยี่ยม! คุณตอบคำถามทั้งหมดแล้ว' : 'Excellent! You have completed all questions.'))}
+                </p>
+            </div>
+
+            <div className="my-4 flex flex-col items-center justify-center flex-1 py-2 w-full">
                 {/* SECTION 1: WORD SEARCH 10x10 */}
-                <div className="bg-slate-900/90 border-2 border-amber-400/50 p-4 rounded-3xl shadow-xl md:col-span-6 lg:col-span-7 flex flex-col">
-                    <div className="flex justify-between items-center mb-2">
-                        <h3 className="text-xs font-black uppercase text-amber-300">1. Word Grid (10x10)</h3>
-                        <span className="text-[10px] text-cyan-300 font-bold">{foundWords.length} / {TARGET_WORDS.length} Kata</span>
+                <div className="bg-slate-900/90 border-2 border-amber-400/50 p-5 rounded-3xl shadow-xl flex flex-col items-center w-full max-w-2xl">
+                    <div className="flex w-full justify-between items-center mb-4">
+                        <h3 className="text-xs md:text-sm font-black uppercase text-amber-300">
+                             {language === 'id' ? 'Pencarian Kata' : (language === 'th' ? 'ค้นหาคำศัพท์' : 'Word Grid')} (10x10)
+                        </h3>
+                        <span className="text-[10px] md:text-xs text-cyan-300 font-bold bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 shadow-inner">
+                            {foundWords.length} / {CASE_STUDY_QUESTIONS.length} {language === 'id' ? 'Kata Ditemukan' : (language === 'th' ? 'พบคำ' : 'Words Found')}
+                        </span>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5 mb-3">
-                        {TARGET_WORDS.map((w) => (
-                            <button
-                                key={w}
-                                onClick={() => handleMarkWord(w)}
-                                className={`px-2 py-0.5 rounded text-[10px] font-black tracking-wider transition ${foundWords.includes(w) ? 'bg-emerald-500 text-slate-950 line-through' : 'bg-slate-800 text-slate-300 border border-slate-700'
-                                    }`}
-                            >
-                                {w}
-                            </button>
-                        ))}
+                    <div className="flex flex-wrap justify-center gap-2 mb-5 w-full bg-slate-950/50 p-2 rounded-xl">
+                        {CASE_STUDY_QUESTIONS.map((q, idx) => {
+                            const isFound = foundWords.includes(q.word);
+                            const isCurrent = idx === currentQuestionIndex;
+                            return (
+                                <div
+                                    key={q.word}
+                                    className={`px-3 py-1.5 rounded text-[10px] md:text-xs font-black tracking-wider transition-all duration-300 ${
+                                        isFound 
+                                            ? 'bg-emerald-500 text-slate-950 shadow-md scale-105' 
+                                            : isCurrent
+                                                ? 'bg-cyan-600/80 text-white border border-cyan-400 animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.5)]'
+                                                : 'bg-slate-800 text-slate-500 border border-slate-700 opacity-50'
+                                        }`}
+                                >
+                                    {isFound ? q.word : '? ? ? ? ?'}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     {/* Grid Render */}
-                    <div className="grid grid-cols-10 gap-1 bg-slate-950 p-2 rounded-xl border border-slate-800 max-w-[340px] mx-auto md:max-w-none w-full">
+                    <div className="grid grid-cols-10 gap-1.5 bg-slate-950 p-3 rounded-2xl border border-slate-800 max-w-[340px] mx-auto md:max-w-none shadow-inner w-full relative overflow-hidden">
                         {INITIAL_GRID.map((row, rIdx) =>
                             row.map((letter, cIdx) => {
                                 const key = `${rIdx}-${cIdx}`;
                                 const isSel = selectedCells.includes(key);
+                                const isFound = foundCells.includes(key);
                                 return (
                                     <div
                                         key={key}
                                         onClick={() => toggleCell(rIdx, cIdx)}
-                                        className={`aspect-square flex items-center justify-center font-mono font-bold text-[11px] md:text-xs rounded cursor-pointer select-none transition ${isSel
-                                            ? 'bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 shadow-md font-black scale-105'
-                                            : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+                                        className={`aspect-square flex items-center justify-center font-mono font-bold text-xs md:text-sm rounded cursor-pointer select-none transition-all duration-200 ${
+                                            isFound 
+                                                ? 'bg-emerald-500 text-slate-950 font-black shadow-md scale-105 z-10'
+                                                : isSel
+                                                    ? 'bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 shadow-md font-black scale-110 z-10 ring-2 ring-white/50'
+                                                    : 'bg-slate-900 text-slate-300 hover:bg-slate-700 hover:scale-105'
                                             }`}
                                     >
                                         {letter}
@@ -154,62 +252,31 @@ export const WordSearchView: React.FC = () => {
                             })
                         )}
                     </div>
-                    <p className="text-[8px] text-slate-400 mt-2 text-center">*Klik huruf pada grid lalu ketuk label kata di atas jika menemukan kata yang tepat.</p>
-                </div>
-
-                {/* SECTION 2: ENGLISH CLINICAL CASE QUIZ */}
-                <div className="bg-slate-900/90 border-2 border-cyan-500/50 p-4 rounded-3xl shadow-xl space-y-3 md:col-span-6 lg:col-span-5 h-full flex flex-col justify-between">
-                    <div>
-                        <h3 className="text-xs font-black uppercase text-cyan-300 mb-2">2. English Nursing Case Study</h3>
-                        <p className="text-xs text-slate-200 leading-relaxed font-semibold bg-slate-950 p-3 rounded-xl border border-slate-800">
-                            {QUIZ_QUESTION.question}
-                        </p>
-
-                        <div className="space-y-2 mt-3">
-                            {QUIZ_QUESTION.options.map((opt, idx) => (
-                                <button
-                                    key={idx}
-                                    disabled={isSubmitted}
-                                    onClick={() => setQuizAnswer(idx)}
-                                    className={`w-full text-left p-3 rounded-xl text-xs font-semibold transition border ${quizAnswer === idx
-                                        ? 'bg-cyan-600 border-cyan-300 text-white shadow-lg font-bold'
-                                        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
-                                        }`}
-                                >
-                                    {opt}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    {isSubmitted && (
-                        <div className={`p-3 rounded-xl text-xs border mt-3 ${quizAnswer === QUIZ_QUESTION.correct ? 'bg-emerald-950 border-emerald-500 text-emerald-200' : 'bg-rose-950 border-rose-500 text-rose-200'}`}>
-                            <p className="font-bold mb-1 flex items-center gap-1">
-                                <Award className="w-4 h-4 text-amber-400" /> Clinical Explanation:
-                            </p>
-                            <p className="text-[10px] leading-relaxed">{QUIZ_QUESTION.explanation}</p>
-                        </div>
-                    )}
+                    <p className="text-[10px] text-slate-400 mt-4 text-center">
+                        *{language === 'id' ? 'Tebak jawaban dari soal di atas (dalam bahasa Inggris), lalu cari dan ketuk huruf-hurufnya di grid.' : (language === 'th' ? 'เดาคำตอบของคำถามด้านบน (เป็นภาษาอังกฤษ) จากนั้นค้นหาและแตะตัวอักษรในตาราง' : 'Guess the answer to the question above (in English), then find and tap the letters in the grid.')}
+                    </p>
                 </div>
             </div>
 
             {/* Submit Button */}
-            <div className="shrink-0 mt-4">
-                {!isSubmitted ? (
+            <div className="shrink-0 mt-2 max-w-4xl mx-auto w-full">
+                {!isGameComplete ? (
                     <button
                         onClick={handleSubmitAll}
-                        disabled={quizAnswer === null}
-                        className={`w-full py-3.5 font-black rounded-xl text-xs uppercase tracking-wider shadow-lg transition ${quizAnswer !== null ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950' : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                        disabled={!allWordsFound}
+                        className={`w-full py-4 font-black rounded-xl text-xs md:text-sm uppercase tracking-wider shadow-lg transition-all duration-300 ${allWordsFound ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 hover:scale-[1.01] hover:shadow-amber-500/50' : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                             }`}
                     >
-                        Submit Answers & Evaluate Level 2
+                        {allWordsFound 
+                            ? (language === 'id' ? 'Selesai & Kumpulkan!' : (language === 'th' ? 'ส่งคำตอบ!' : 'Finish & Submit!'))
+                            : (language === 'id' ? 'Temukan semua 5 kata untuk melanjutkan' : (language === 'th' ? 'ค้นหาครบ 5 คำเพื่อดำเนินการต่อ' : 'Find all 5 words to continue'))}
                     </button>
                 ) : (
                     <button
                         onClick={() => setScreen('result')}
-                        className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black rounded-xl text-xs uppercase tracking-wider shadow-lg"
+                        className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-black rounded-xl text-xs md:text-sm uppercase tracking-wider shadow-lg hover:scale-[1.01] transition-all duration-300"
                     >
-                        Lihat Rekap Evaluasi Keseluruhan
+                        {language === 'id' ? 'Lihat Rekap Evaluasi' : (language === 'th' ? 'ดูบทสรุปการประเมิน' : 'View Evaluation Summary')}
                     </button>
                 )}
             </div>

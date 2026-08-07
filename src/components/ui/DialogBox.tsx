@@ -17,28 +17,36 @@ export const DialogBox: React.FC<DialogBoxProps> = ({ speakerName, text, avatar,
     const [displayedText, setDisplayedText] = useState('');
     const [isTyping, setIsTyping] = useState(true);
 
+    const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+
     useEffect(() => {
         setDisplayedText('');
         setIsTyping(true);
         let currentIndex = 0;
 
-        const timer = setInterval(() => {
+        timerRef.current = setInterval(() => {
             if (currentIndex < text.length) {
                 setDisplayedText((prev) => prev + text.charAt(currentIndex));
                 currentIndex++;
             } else {
                 setIsTyping(false);
-                clearInterval(timer);
+                if (timerRef.current) clearInterval(timerRef.current);
             }
         }, 25); // Kecepatan mengetik 25ms/karakter
 
-        return () => clearInterval(timer);
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
     }, [text]);
 
     const handleFastForward = () => {
         if (isTyping) {
             setDisplayedText(text);
             setIsTyping(false);
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
         } else if (onComplete) {
             onComplete();
         }
