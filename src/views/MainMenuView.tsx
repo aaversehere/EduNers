@@ -22,26 +22,26 @@ export const MainMenuView: React.FC = () => {
             <div className="absolute inset-0 bg-slate-950/20 pointer-events-none z-0" />
 
             {/* Top Bar Player Status & Language Toggle */}
-            <div className="flex items-center justify-between bg-slate-900/90 border-[4px] border-sky-300 p-3.5 rounded-[1.5rem] shadow-[0_6px_0_#1e3a8a,0_10px_20px_rgba(0,0,0,0.3)] sticky top-0 z-20 shrink-0 backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                    <div onClick={() => setScreen('locker')} className="cursor-pointer transition transform hover:scale-105" title="Ganti Avatar">
+            <div className="flex flex-wrap items-center justify-between gap-y-3 gap-x-2 bg-slate-900/90 border-[4px] border-sky-300 p-3.5 rounded-[1.5rem] shadow-[0_6px_0_#1e3a8a,0_10px_20px_rgba(0,0,0,0.3)] sticky top-0 z-20 shrink-0 backdrop-blur-md">
+                <div className="flex items-center gap-3 min-w-0">
+                    <div onClick={() => setScreen('locker')} className="cursor-pointer transition transform hover:scale-105 shrink-0" title="Ganti Avatar">
                         <Avatar avatar={currentUser?.avatar} size="sm" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                            <h2 className="text-sm font-black text-amber-300 uppercase tracking-wider drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.8)]">{currentUser?.username}</h2>
-                            <UserCog onClick={() => setScreen('locker')} className="w-3.5 h-3.5 text-slate-300 cursor-pointer hover:text-white" />
+                            <h2 className="text-sm font-black text-amber-300 uppercase tracking-wider drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.8)] truncate">{currentUser?.username}</h2>
+                            <UserCog onClick={() => setScreen('locker')} className="w-3.5 h-3.5 text-slate-300 cursor-pointer hover:text-white shrink-0" />
                         </div>
-                        <p className="text-[11px] text-sky-200 font-bold mt-0.5 flex items-center gap-2">
-                            <span>NIM: {currentUser?.nim} • {t.score}: <span className="text-amber-400 font-black">{totalScore}</span></span>
-                            <span className="inline-flex items-center gap-1 text-[9px] bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 px-2 py-0.5 rounded-full font-black shadow-sm">
+                        <p className="text-[11px] text-sky-200 font-bold mt-0.5 flex flex-wrap items-center gap-2">
+                            <span className="truncate">NIM: {currentUser?.nim} • {t.score}: <span className="text-amber-400 font-black">{totalScore}</span></span>
+                            <span className="inline-flex shrink-0 items-center gap-1 text-[9px] bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 px-2 py-0.5 rounded-full font-black shadow-sm">
                                 <Cloud className="w-2.5 h-2.5 text-cyan-300 animate-pulse" /> Supabase Live
                             </span>
                         </p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto shrink-0">
                     <LanguageToggle />
                     <button
                         onClick={logout}

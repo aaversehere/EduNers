@@ -111,7 +111,7 @@ export const WordSearchView: React.FC = () => {
             const colIdx = rowStr.indexOf(word);
             
             if (colIdx !== -1) {
-                const expectedCoords = [];
+                const expectedCoords: string[] = [];
                 for (let i = 0; i < word.length; i++) {
                     expectedCoords.push(`${r}-${colIdx + i}`);
                 }
