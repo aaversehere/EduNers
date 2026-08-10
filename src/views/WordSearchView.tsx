@@ -59,6 +59,7 @@ export const WordSearchView: React.FC = () => {
     const [foundWords, setFoundWords] = useState<string[]>([]);
     const [isGameComplete, setIsGameComplete] = useState(false);
     const [foundCells, setFoundCells] = useState<string[]>([]);
+    const [errorCells, setErrorCells] = useState<string[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
     useEffect(() => {
@@ -77,8 +78,8 @@ export const WordSearchView: React.FC = () => {
     const toggleCell = (row: number, col: number) => {
         const key = `${row}-${col}`;
         
-        // Prevent toggling already found cells
-        if (foundCells.includes(key)) return;
+        // Prevent toggling already found cells or if it's currently showing an error
+        if (foundCells.includes(key) || errorCells.length > 0) return;
 
         let newSelected = [...selectedCells];
         if (newSelected.includes(key)) {
@@ -105,6 +106,8 @@ export const WordSearchView: React.FC = () => {
 
         if (foundWords.includes(word)) return;
         
+        let isMatch = false;
+
         // Check horizontal match in the grid
         for (let r = 0; r < INITIAL_GRID.length; r++) {
             const rowStr = INITIAL_GRID[r].join('');
@@ -122,6 +125,7 @@ export const WordSearchView: React.FC = () => {
                     sortedSelected.every((val, index) => val === sortedExpected[index])) {
                     
                     // Match found!
+                    isMatch = true;
                     setFoundWords(prev => [...prev, word]);
                     setFoundCells(prev => [...prev, ...expectedCoords]);
                     setSelectedCells([]);
@@ -129,6 +133,16 @@ export const WordSearchView: React.FC = () => {
                     return; // Exit early
                 }
             }
+        }
+
+        // UX FIX: If they selected the same number of cells as the target word but it didn't match,
+        // it means they selected the wrong cells. We give them a "Wrong" visual feedback.
+        if (!isMatch && currentSelected.length === word.length) {
+            setErrorCells([...currentSelected]);
+            setTimeout(() => {
+                setErrorCells([]);
+                setSelectedCells([]);
+            }, 600); // clear after 600ms
         }
     };
 
@@ -234,6 +248,7 @@ export const WordSearchView: React.FC = () => {
                                 const key = `${rIdx}-${cIdx}`;
                                 const isSel = selectedCells.includes(key);
                                 const isFound = foundCells.includes(key);
+                                const isErr = errorCells.includes(key);
                                 return (
                                     <div
                                         key={key}
@@ -241,9 +256,11 @@ export const WordSearchView: React.FC = () => {
                                         className={`aspect-square flex items-center justify-center font-mono font-bold text-xs md:text-sm rounded cursor-pointer select-none transition-all duration-200 ${
                                             isFound 
                                                 ? 'bg-emerald-500 text-slate-950 font-black shadow-md scale-105 z-10'
-                                                : isSel
-                                                    ? 'bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 shadow-md font-black scale-110 z-10 ring-2 ring-white/50'
-                                                    : 'bg-slate-900 text-slate-300 hover:bg-slate-700 hover:scale-105'
+                                                : isErr
+                                                    ? 'bg-rose-600 text-white font-black shadow-[0_0_15px_rgba(225,29,72,0.6)] scale-110 z-10 ring-2 ring-rose-400'
+                                                    : isSel
+                                                        ? 'bg-gradient-to-tr from-amber-500 to-amber-400 text-slate-950 shadow-md font-black scale-110 z-10 ring-2 ring-white/50'
+                                                        : 'bg-slate-900 text-slate-300 hover:bg-slate-700 hover:scale-105'
                                             }`}
                                     >
                                         {letter}
