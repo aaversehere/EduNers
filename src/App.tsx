@@ -10,7 +10,7 @@ import { AudioPlayer } from './components/AudioPlayer';
 import { playClickSound } from './lib/audio';
 
 export const App: React.FC = () => {
-    const { currentScreen, isAudioMuted } = useGameStore();
+    const { currentScreen } = useGameStore();
 
     React.useEffect(() => {
         const handleGlobalClick = (e: MouseEvent) => {
