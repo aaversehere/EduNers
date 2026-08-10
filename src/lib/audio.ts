@@ -1,10 +1,25 @@
+let sharedAudioContext: AudioContext | null = null;
+
+function getAudioContext() {
+    if (!sharedAudioContext) {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContext) {
+            sharedAudioContext = new AudioContext();
+        }
+    }
+    
+    // Resume context if suspended (crucial for mobile/iOS)
+    if (sharedAudioContext && sharedAudioContext.state === 'suspended') {
+        sharedAudioContext.resume();
+    }
+    
+    return sharedAudioContext;
+}
+
 export const playClickSound = () => {
     try {
-        // Create audio context only when needed to bypass autoplay restrictions
-        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-        if (!AudioContext) return;
-        
-        const ctx = new AudioContext();
+        const ctx = getAudioContext();
+        if (!ctx) return;
         
         // Oscillator for the "pop" sound
         const osc = ctx.createOscillator();
@@ -26,12 +41,6 @@ export const playClickSound = () => {
         osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + 0.05);
         
-        // Clean up
-        setTimeout(() => {
-            if (ctx.state !== 'closed') {
-                ctx.close();
-            }
-        }, 100);
     } catch (e) {
         // Ignore errors if audio context is blocked
         console.error("Could not play click sound", e);
