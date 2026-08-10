@@ -25,6 +25,8 @@ interface GameState {
     submitSKPResult: (result: SKPResult) => void;
     resetGameProgress: () => void;
     logout: () => void;
+    isAudioMuted: boolean;
+    toggleAudio: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -37,12 +39,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     skpResults: [],
     totalScore: 0,
     language: (localStorage.getItem('eduners_lang') as Language) || 'id',
+    isAudioMuted: true,
 
     setScreen: (screen) => set({ currentScreen: screen }),
     setLanguage: (lang) => {
         localStorage.setItem('eduners_lang', lang);
         set({ language: lang });
     },
+    toggleAudio: () => set((state) => ({ isAudioMuted: !state.isAudioMuted })),
 
     login: (nim, username) => {
         const accounts = get().savedAccounts;

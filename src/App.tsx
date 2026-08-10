@@ -6,9 +6,31 @@ import { MainMenuView } from './views/MainMenuView';
 import { GameplayView } from './views/GameplayView';
 import { WordSearchView } from './views/WordSearchView';
 import { ResultView } from './views/ResultView';
+import { AudioPlayer } from './components/AudioPlayer';
+import { playClickSound } from './lib/audio';
 
 export const App: React.FC = () => {
-    const { currentScreen } = useGameStore();
+    const { currentScreen, isAudioMuted } = useGameStore();
+
+    React.useEffect(() => {
+        const handleGlobalClick = (e: MouseEvent) => {
+            // Jika audio global dimute, jangan putar efek suara
+            if (useGameStore.getState().isAudioMuted) return;
+
+            // Cari tahu apakah elemen yang diklik adalah button atau memiliki kursor pointer
+            const target = e.target as HTMLElement;
+            const isButton = target.closest('button') !== null || target.closest('.cursor-pointer') !== null;
+            
+            if (isButton) {
+                playClickSound();
+            }
+        };
+
+        document.addEventListener('click', handleGlobalClick);
+        return () => {
+            document.removeEventListener('click', handleGlobalClick);
+        };
+    }, []);
 
     const renderScreen = () => {
         switch (currentScreen) {
@@ -37,6 +59,7 @@ export const App: React.FC = () => {
             <div className="w-full h-full relative overflow-hidden flex flex-col justify-between transition-all duration-300">
                 {renderScreen()}
             </div>
+            <AudioPlayer />
         </div>
     );
 };
